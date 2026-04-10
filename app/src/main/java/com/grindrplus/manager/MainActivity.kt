@@ -76,6 +76,7 @@ import com.grindrplus.manager.ui.BlockLogScreen
 import com.grindrplus.manager.ui.CalculatorScreen
 import com.grindrplus.manager.ui.HomeScreen
 import com.grindrplus.manager.ui.InstallPage
+import com.grindrplus.manager.ui.MessageSearchScreen
 import com.grindrplus.manager.ui.NotificationScreen
 import com.grindrplus.manager.ui.SettingsScreen
 import com.grindrplus.manager.ui.theme.GrindrPlusTheme
@@ -111,6 +112,8 @@ sealed class MainNavItem(
 
     data object Home : MainNavItem(Icons.Rounded.Home, "Home", { HomeScreen(this) })
 
+    data object MessageSearch : MainNavItem(Icons.Filled.Search, "Search", { MessageSearchScreen(it) })
+
     data object BlockLog : MainNavItem(Icons.Filled.History, "Block Log", { BlockLogScreen(this) })
 
     data object Notifications :
@@ -121,7 +124,7 @@ sealed class MainNavItem(
 
     companion object {
         val VALUES by lazy {
-            listOf(InstallPage, BlockLog, Home, Notifications, Settings)
+            listOf(InstallPage, BlockLog, Home, MessageSearch, Notifications, Settings)
         }
     }
 }

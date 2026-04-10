@@ -175,4 +175,76 @@ class Database(
             GrindrPlus.showToast(Toast.LENGTH_LONG, "Error: ${e.message}")
         }
     }
+
+    @Command("search_messages", aliases = ["sm"], help = "Search for a message globally")
+    fun searchMessages(args: List<String>) {
+        if (args.isEmpty()) {
+            GrindrPlus.showToast(Toast.LENGTH_LONG, "Please provide a search term.")
+            return
+        }
+
+        val searchTerm = args.joinToString(" ")
+        try {
+            val query = """
+                SELECT c.name, m.body, m.timestamp 
+                FROM messages m 
+                JOIN chat_conversations c ON m.conversation_id = c.conversation_id 
+                WHERE m.body LIKE ? 
+                ORDER BY m.timestamp DESC 
+                LIMIT 50;
+            """.trimIndent()
+            
+            val rows = DatabaseHelper.query(query, arrayOf("%$searchTerm%"))
+
+            GrindrPlus.runOnMainThreadWithCurrentActivity { activity ->
+                val dialogView = LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    setPadding(60, 40, 60, 40)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                }
+
+                val searchResult = if (rows.isEmpty()) {
+                    "No messages found containing '$searchTerm'."
+                } else {
+                    rows.joinToString("\n\n") { row ->
+                        val name = row["name"] ?: "Unknown"
+                        val body = row["body"] ?: ""
+                        "From: $name\nMsg: $body"
+                    }
+                }
+
+                val textView = AppCompatTextView(activity).apply {
+                    text = searchResult
+                    textSize = 14f
+                    setTextColor(Color.WHITE)
+                    setPadding(20, 20, 20, 20)
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    ).apply {
+                        setMargins(0, 20, 0, 0)
+                    }
+                }
+
+                dialogView.addView(textView)
+
+                AlertDialog.Builder(activity)
+                    .setTitle("Search Results: $searchTerm")
+                    .setView(dialogView)
+                    .setPositiveButton("Close") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    .setNegativeButton("Copy") { _, _ ->
+                        copyToClipboard("Search Results", searchResult)
+                    }
+                    .create()
+                    .show()
+            }
+        } catch (e: Exception) {
+            GrindrPlus.showToast(Toast.LENGTH_LONG, "Error: ${e.message}")
+        }
+    }
 }
